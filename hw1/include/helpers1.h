@@ -10,4 +10,6 @@
 //void printUsageStatement();
 void printOutline(FILE * input);
 void printLVLNum(FILE * input, int NUM);
+void printEmoji(FILE * input, int countMode);
+void printPattern(FILE * input, char* pattern, int countMode);
 # endif

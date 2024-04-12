@@ -2,7 +2,8 @@
 #include <stdio.h>
 // Define all helper functions for hw1 in this file
 #include <stdbool.h>
-
+#include <ctype.h>
+#include "hw1.h"
 /*void printUsageStatement()
 {
   printf("53markdown [option] ... \n");
@@ -82,27 +83,143 @@ void printLVLNum(FILE * input, int NUM)
   int temp = fgetc(input);
   bool newLine = true;
   int alreadyStoredTabs = 0;
+ 
   while (temp != -1)
     {
-        if (newLine) {
-            alreadyStoredTabs = 0; // Reset hash count at the start of each new line
-            while (temp == '#') { // Count '#' characters
-                alreadyStoredTabs++;
-                temp = fgetc(input); // Move to the next character
-            }
-            if (temp == ' ' && alreadyStoredTabs == NUM) { // Check if it's the correct header level
-                temp = fgetc(input); // Skip the space before starting to print
-                while (temp != '\n' && temp != EOF) { // Print until the end of the line
+        if (newLine)
+	  {
+	    alreadyStoredTabs = 0; //reset count to 0
+            while (temp == '#')
+	      {
+		alreadyStoredTabs++;
+		temp = fgetc(input); // Move to the next character that's not a #
+	      }
+            if (temp == ' ' && alreadyStoredTabs == NUM)  // Check if it's the correct header level
+	      {
+		temp = fgetc(input); //Skip the space between # and beginning of text
+                while (temp != '\n' && temp != -1)
+		  {
                     printf("%c", temp);
                     temp = fgetc(input);
-                }
-                printf("\n"); // Make sure to print a newline after each header
-            }
-            newLine = false; // Now we're no longer at the start of a line
-        }
-        if (temp == '\n') { // If we encounter a newline, reset to new line status
-            newLine = true;
-        }
-        temp = fgetc(input); // Read the next character
+		  }
+                printf("\n"); // print a newline after each header
+	      }
+            newLine = false; 
+	  }
+        if (temp == '\n') //if we are at the end of a line go through the # check starting next character
+	  {
+	    newLine = true;
+	  }
+        temp = fgetc(input);
     }
 }
+
+void printEmoji (FILE* input, int countMode)
+{
+  //printf("%d\n", countMode);
+  int count = 0;
+  bool newLine = false;
+  char tempEmoji [1000];
+  int index = 0;
+  int temp = fgetc(input);
+  int line = 0;
+  int lineC = 0;
+  int lineCount = 0;
+  while (temp != -1)
+    {
+      if(temp == '\n')
+	{
+	  line++;
+	  lineC = 0;
+	}
+      if(newLine)
+	{
+	  if(temp == ':')
+	    {
+	      if(index > 0)
+		{
+
+		  if(lineC == 0 && countMode == 1)
+		    {
+		      lineCount ++;
+		      lineC = 1;
+		    }
+		  tempEmoji[index] = '\0';
+		  printf(":%s:\n", tempEmoji);
+		  //printf("%d", lineCount);
+		}
+	      newLine = false;
+	      index = 0;
+	    }
+	  else if (islower(temp) || isdigit(temp) || temp == '_')
+              {
+	      
+                tempEmoji[index] = temp;
+		index ++;
+              }
+	  else
+	    {
+	      newLine = false;
+	      index = 0;
+	    }
+	}
+      else if (temp == ':') //if we are at the beginning of a :, start checking                            
+	{
+	  newLine = true;
+	  index = 0;
+	}
+      temp = fgetc(input);
+    }
+  if(countMode == 1)
+    {
+      fprintf(stderr, "%d\n", lineCount);
+    }
+}
+
+void printPattern (FILE* input, char* pattern, int countMode)
+{
+  //test
+  //printf("The pattern is " COLOR_START "%s" COLOR_RESET "..\n", pattern);
+  char temp [1000];
+  int count = 0;
+  while (fgets(temp,1000,input)!=NULL)
+    {
+      //printf("%s", temp);
+      if(strstr(temp, pattern) == NULL)
+	{
+	  continue;
+	}
+      int i;
+      for(i = 0; i < sizeof(temp) && temp[i] != '\0'; i++)
+	{
+	  if(temp[i] == pattern[0])
+	    {
+	      int match = 1;
+	      int j;
+	      for(j = 0; j < strlen(pattern); j++)
+		{
+		  if(temp[i+j] == '\0' || temp[i+j] != pattern[j])
+		    {
+		      match = 0;
+		      break;
+		    }
+		}
+	      if(match == 1)
+		{
+		  count ++;
+		  printf( COLOR_START "%s" COLOR_RESET, pattern);
+		  i += strlen(pattern)-1;
+		  continue;
+		}
+	    }
+	  printf("%c", temp[i]);
+	}
+    }
+  
+  if(countMode == 1)
+    {
+      fprintf(stderr, "%d\n", count);
+    }
+  
+}
+
